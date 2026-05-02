@@ -21,6 +21,7 @@ export function buildSections(): Section[] {
     ...TEAMS.map((t) => ({
       id: t.code,
       title: t.name,
+      flag: t.flag,
       confederation: t.confederation,
     })),
     { id: 'museum', title: 'FIFA Museum' },
