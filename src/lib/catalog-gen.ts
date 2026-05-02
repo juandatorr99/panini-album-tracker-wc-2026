@@ -73,7 +73,7 @@ export function buildStickers(): Sticker[] {
 
   COKE_PLAYERS.forEach((player, i) => {
     stickers.push({
-      code: `COKE${i + 1}`,
+      code: `CC${i + 1}`,
       type: 'coke',
       section: 'coke',
       name: player,

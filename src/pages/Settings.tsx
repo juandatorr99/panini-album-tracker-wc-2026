@@ -87,8 +87,8 @@ export function Settings() {
       </div>
 
       {/* Coca-Cola toggle */}
-      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl">
+        <div className="flex items-center justify-between p-4">
           <div>
             <p className="font-semibold text-white text-sm">Coca-Cola Insert</p>
             <p className="text-xs text-white/30 mt-0.5">
@@ -97,15 +97,15 @@ export function Settings() {
           </div>
           <button
             onClick={toggleCoke}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+            className={`relative shrink-0 w-12 h-7 rounded-full transition-colors duration-200 ${
               showCokeInsert ? 'bg-indigo-500' : 'bg-white/10'
             }`}
             role="switch"
             aria-checked={showCokeInsert}
           >
             <span
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                showCokeInsert ? 'translate-x-6' : 'translate-x-1'
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                showCokeInsert ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
           </button>
@@ -113,6 +113,7 @@ export function Settings() {
       </div>
 
       {/* Group draw assignments */}
+
       <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
         <p className="font-semibold text-white text-sm mb-0.5">Group Draw Assignments</p>
         <p className="text-xs text-white/30 mb-4">
