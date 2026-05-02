@@ -15,9 +15,9 @@ export function Section() {
 
   if (!section) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-white/40">
         <p className="mb-3">Section not found.</p>
-        <button onClick={() => navigate('/')} className="text-blue-600 text-sm">
+        <button onClick={() => navigate('/')} className="text-indigo-400 text-sm">
           ← Back to album
         </button>
       </div>
@@ -31,35 +31,38 @@ export function Section() {
     <div className="p-4 max-w-2xl mx-auto">
       <button
         onClick={() => navigate('/')}
-        className="text-sm text-blue-600 mb-3 flex items-center gap-1 hover:underline"
+        className="text-indigo-400 text-sm mb-4 flex items-center gap-1 active:opacity-70"
       >
         ← Back
       </button>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
-        <div className="flex items-baseline justify-between mb-1">
-          <h1 className="text-lg font-bold text-gray-800">{section.title}</h1>
-          <span className="text-sm text-gray-500">{pct}%</span>
+      <div className="bg-white/[0.05] border border-white/[0.08] rounded-2xl p-4 mb-4 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            {section.flag && <span className="text-2xl leading-none">{section.flag}</span>}
+            <h1 className="text-lg font-bold text-white">{section.title}</h1>
+          </div>
+          <span className="text-sm font-semibold text-white/40">{pct}%</span>
         </div>
         {section.confederation && (
-          <p className="text-xs text-gray-400 mb-2">{section.confederation}</p>
+          <p className="text-xs text-white/30 mb-2">{section.confederation}</p>
         )}
-        <ProgressBar owned={stats.owned} total={stats.total} className="mb-2" />
+        <ProgressBar owned={stats.owned} total={stats.total} className="mb-3" />
         <div className="flex flex-wrap gap-4 text-sm">
-          <span className="text-green-600">{stats.owned} owned</span>
-          <span className="text-red-500">{stats.missing} missing</span>
+          <span className="text-emerald-400">{stats.owned} owned</span>
+          <span className="text-red-400">{stats.missing} missing</span>
           {stats.duplicates > 0 && (
-            <span className="text-blue-500">{stats.duplicates} duplicates</span>
+            <span className="text-indigo-400">{stats.duplicates} duplicates</span>
           )}
           {stats.foilTotal > 0 && (
-            <span className="text-yellow-600">
+            <span className="text-yellow-400">
               {stats.foilOwned}/{stats.foilTotal} foils ✨
             </span>
           )}
         </div>
       </div>
 
-      <p className="text-xs text-gray-400 text-center mb-3">
+      <p className="text-[11px] text-white/20 text-center mb-3">
         Tap to add · Red − button or right-click to remove
       </p>
 
