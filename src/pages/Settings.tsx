@@ -62,42 +62,49 @@ export function Settings() {
   }
 
   const ownedCount = Object.values(counts).filter((n) => n >= 1).length
+  const duplicateCount = Object.values(counts).reduce((sum, n) => sum + Math.max(0, n - 1), 0)
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <h1 className="text-lg font-bold text-gray-800">Settings</h1>
+      <p className="text-[11px] font-bold text-white/25 uppercase tracking-widest">Settings</p>
 
       {/* Collection summary */}
-      <div className="bg-[#1a3c5e] text-white rounded-xl p-3 text-sm">
-        <p className="opacity-80 text-xs mb-0.5">Collection summary</p>
-        <p>
-          <span className="font-bold">{ownedCount}</span> stickers owned ·{' '}
-          <span className="font-bold">
-            {Object.values(counts).reduce((sum, n) => sum + Math.max(0, n - 1), 0)}
-          </span>{' '}
-          duplicates
-        </p>
+      <div
+        className="rounded-2xl p-4"
+        style={{ background: 'linear-gradient(135deg, #3730a3 0%, #1e40af 100%)' }}
+      >
+        <p className="text-white/50 text-xs mb-2">Collection summary</p>
+        <div className="flex gap-6">
+          <div>
+            <p className="text-2xl font-black text-white leading-none">{ownedCount}</p>
+            <p className="text-white/40 text-xs mt-0.5">owned</p>
+          </div>
+          <div>
+            <p className="text-2xl font-black text-white leading-none">{duplicateCount}</p>
+            <p className="text-white/40 text-xs mt-0.5">duplicates</p>
+          </div>
+        </div>
       </div>
 
       {/* Coca-Cola toggle */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-gray-800 text-sm">Coca-Cola Insert</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="font-semibold text-white text-sm">Coca-Cola Insert</p>
+            <p className="text-xs text-white/30 mt-0.5">
               13 promo stickers — not part of the 980 base set
             </p>
           </div>
           <button
             onClick={toggleCoke}
-            className={`relative w-11 h-6 rounded-full transition-colors ${
-              showCokeInsert ? 'bg-blue-600' : 'bg-gray-300'
+            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+              showCokeInsert ? 'bg-indigo-500' : 'bg-white/10'
             }`}
             role="switch"
             aria-checked={showCokeInsert}
           >
             <span
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+              className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
                 showCokeInsert ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -106,26 +113,27 @@ export function Settings() {
       </div>
 
       {/* Group draw assignments */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h2 className="font-medium text-gray-800 text-sm mb-1">Group Draw Assignments</h2>
-        <p className="text-xs text-gray-500 mb-3">
-          Set each team's group (A–L) to display them in group order on the album home screen.
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
+        <p className="font-semibold text-white text-sm mb-0.5">Group Draw Assignments</p>
+        <p className="text-xs text-white/30 mb-4">
+          Set each team's group (A–L) to display them in group order on the home screen.
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-3 max-h-80 overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2.5 gap-x-3 max-h-80 overflow-y-auto pr-1">
           {TEAMS.map((team) => (
             <div key={team.code} className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-700 w-20 truncate shrink-0">{team.name}</span>
+              {team.flag && <span className="text-sm shrink-0">{team.flag}</span>}
+              <span className="text-xs text-white/50 flex-1 truncate min-w-0">{team.name}</span>
               <select
                 value={groupAssignments[team.code] ?? ''}
                 onChange={(e) => {
                   if (e.target.value) setGroup(team.code, e.target.value)
                   else removeGroup(team.code)
                 }}
-                className="text-xs border border-gray-200 rounded px-1 py-0.5 flex-1 min-w-0"
+                className="text-xs bg-white/[0.08] border border-white/[0.10] text-white rounded-lg px-2 py-1 w-12 shrink-0 focus:outline-none focus:border-indigo-500/50 appearance-none"
               >
-                <option value="">—</option>
+                <option value="" className="bg-[#0a0a14]">—</option>
                 {GROUPS.map((g) => (
-                  <option key={g} value={g}>
+                  <option key={g} value={g} className="bg-[#0a0a14]">
                     {g}
                   </option>
                 ))}
@@ -136,17 +144,17 @@ export function Settings() {
       </div>
 
       {/* Export / Import */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
-        <h2 className="font-medium text-gray-800 text-sm">Backup & Restore</h2>
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4 space-y-2.5">
+        <p className="font-semibold text-white text-sm">Backup & Restore</p>
         <button
           onClick={handleExport}
-          className="w-full bg-[#1a3c5e] text-white py-2 rounded-lg text-sm font-medium active:opacity-80"
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
         >
           Export collection (JSON)
         </button>
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="w-full border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium active:bg-gray-50"
+          className="w-full bg-white/[0.06] border border-white/[0.10] text-white/70 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
         >
           Import collection (JSON)
         </button>
@@ -160,14 +168,14 @@ export function Settings() {
       </div>
 
       {/* Reset */}
-      <div className="bg-white rounded-xl border border-red-200 p-4">
-        <h2 className="font-medium text-red-700 text-sm mb-1">Danger Zone</h2>
-        <p className="text-xs text-gray-500 mb-3">
+      <div className="bg-red-500/[0.06] border border-red-500/20 rounded-2xl p-4">
+        <p className="font-semibold text-red-400 text-sm mb-1">Danger Zone</p>
+        <p className="text-xs text-white/30 mb-3">
           Resets all sticker counts to zero. Group assignments are kept.
         </p>
         <button
           onClick={handleReset}
-          className="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-medium active:opacity-80"
+          className="w-full bg-red-600 hover:bg-red-500 text-white py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
         >
           Reset all counts
         </button>

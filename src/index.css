@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Prevent tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dark app background */
+html, body, #root {
+  background-color: #0a0a14;
+}
+
+/* Foil shimmer — gold on dark */
+@keyframes foil-dark {
+  0%   { background-position: -300% center; }
+  100% { background-position: 300% center; }
+}
+
+.foil-dark {
+  background: linear-gradient(
+    105deg,
+    rgba(251,191,36,0.10) 0%,
+    rgba(253,224,71,0.50) 25%,
+    rgba(255,255,255,0.60) 45%,
+    rgba(253,224,71,0.50) 65%,
+    rgba(251,191,36,0.10) 100%
+  );
+  background-size: 400% auto;
+  animation: foil-dark 4s linear infinite;
+}

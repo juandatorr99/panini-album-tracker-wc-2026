@@ -21,6 +21,7 @@ export type Sticker = {
 export type Section = {
   id: string
   title: string
+  flag?: string
   group?: string
   confederation?: Confederation
   optional?: boolean
