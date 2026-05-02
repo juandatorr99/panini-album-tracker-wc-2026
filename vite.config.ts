@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: false,
       manifest: {
         name: 'Panini WC 2026 Tracker',
         short_name: 'Panini 2026',
