@@ -92,20 +92,20 @@ export function Settings() {
           <div>
             <p className="font-semibold text-white text-sm">Coca-Cola Insert</p>
             <p className="text-xs text-white/30 mt-0.5">
-              13 promo stickers — not part of the 980 base set
+              14 promo stickers — not part of the 980 base set
             </p>
           </div>
           <button
             onClick={toggleCoke}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+            className={`relative shrink-0 w-12 h-7 rounded-full transition-colors duration-200 ${
               showCokeInsert ? 'bg-indigo-500' : 'bg-white/10'
             }`}
             role="switch"
             aria-checked={showCokeInsert}
           >
             <span
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                showCokeInsert ? 'translate-x-6' : 'translate-x-1'
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                showCokeInsert ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
           </button>
