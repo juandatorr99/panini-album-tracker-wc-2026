@@ -28,5 +28,5 @@ html, body, #root {
     rgba(251,191,36,0.10) 100%
   );
   background-size: 400% auto;
-  animation: foil-dark 4s linear infinite;
+  animation: foil-dark 24s linear infinite;
 }
