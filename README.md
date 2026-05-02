@@ -1,0 +1,1 @@
+# panini-album-tracker-wc-2026
