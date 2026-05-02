@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { InstallBanner } from './InstallBanner'
 
 function IconAlbum({ className }: { className?: string }) {
   return (
@@ -49,6 +50,8 @@ export function Layout() {
           </div>
         </div>
       </header>
+
+      <InstallBanner />
 
       <main className="flex-1 pb-24">
         <Outlet />
