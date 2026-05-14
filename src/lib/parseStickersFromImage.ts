@@ -22,7 +22,7 @@ async function resizeImage(file: File): Promise<string> {
 export async function parseStickersFromImage(
   file: File,
   validCodes: Set<string>
-): Promise<{ found: string[]; raw: string }> {
+): Promise<{ found: string[]; crossedOut: string[]; raw: string }> {
   const base64 = await resizeImage(file)
   const mediaType = 'image/jpeg'
 
@@ -42,14 +42,35 @@ export async function parseStickersFromImage(
   const data = await res.json() as { content: Array<{ type: string; text?: string }> }
   const raw = data.content.find((b) => b.type === 'text')?.text ?? ''
 
-  let parsed: string[] = []
-  try {
-    const match = raw.match(/\[.*\]/s)
-    if (match) parsed = JSON.parse(match[0]) as string[]
-  } catch {
-    parsed = Array.from(raw.matchAll(/\b(FWC\d{1,2}|CC\d{1,2}|[A-Z]{2,3}\d{1,2})\b/g), (m) => m[1])
+  let foundRaw: string[] = []
+  let crossedRaw: string[] = []
+
+  const objMatch = raw.match(/\{[\s\S]*\}/)
+  if (objMatch) {
+    try {
+      const obj = JSON.parse(objMatch[0]) as { found?: unknown; crossedOut?: unknown }
+      if (Array.isArray(obj.found)) foundRaw = obj.found.filter((c): c is string => typeof c === 'string')
+      if (Array.isArray(obj.crossedOut)) crossedRaw = obj.crossedOut.filter((c): c is string => typeof c === 'string')
+    } catch {
+      /* fall through */
+    }
   }
 
-  const found = [...new Set(parsed.map((c) => c.toUpperCase()).filter((c) => validCodes.has(c)))]
-  return { found, raw }
+  if (foundRaw.length === 0 && crossedRaw.length === 0) {
+    const arrMatch = raw.match(/\[[\s\S]*\]/)
+    if (arrMatch) {
+      try {
+        const arr = JSON.parse(arrMatch[0]) as unknown
+        if (Array.isArray(arr)) foundRaw = arr.filter((c): c is string => typeof c === 'string')
+      } catch {
+        foundRaw = Array.from(raw.matchAll(/\b(FWC\d{1,2}|CC\d{1,2}|[A-Z]{2,3}\d{1,2})\b/g), (m) => m[1])
+      }
+    } else {
+      foundRaw = Array.from(raw.matchAll(/\b(FWC\d{1,2}|CC\d{1,2}|[A-Z]{2,3}\d{1,2})\b/g), (m) => m[1])
+    }
+  }
+
+  const found = foundRaw.map((c) => c.toUpperCase()).filter((c) => validCodes.has(c))
+  const crossedOut = [...new Set(crossedRaw.map((c) => c.toUpperCase()).filter((c) => validCodes.has(c)))]
+  return { found, crossedOut, raw }
 }

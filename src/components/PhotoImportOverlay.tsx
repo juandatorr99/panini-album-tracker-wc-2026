@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { stickerByCode } from '../data/catalog'
 import { useCollection } from '../store/collection'
 import { parseStickersFromImage } from '../lib/parseStickersFromImage'
@@ -19,8 +19,11 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
   const [step, setStep] = useState<Step>('idle')
   const [files, setFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
-  const [detectedCodes, setDetectedCodes] = useState<string[]>([])
+  const [entries, setEntries] = useState<Record<string, number>>({})
+  const [crossedOutCodes, setCrossedOutCodes] = useState<string[]>([])
   const [errorMsg, setErrorMsg] = useState('')
+  const [addInput, setAddInput] = useState('')
+  const [addError, setAddError] = useState('')
 
   const handleFiles = async (selected: FileList | null) => {
     if (!selected || selected.length === 0) return
@@ -34,8 +37,17 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
       const results = await Promise.all(
         fileArr.map((f) => parseStickersFromImage(f, VALID_CODES))
       )
-      const merged = [...new Set(results.flatMap((r) => r.found))]
-      setDetectedCodes(merged)
+      const crossedUnion = [...new Set(results.flatMap((r) => r.crossedOut))]
+      const crossedSet = new Set(crossedUnion)
+      const counted: Record<string, number> = {}
+      for (const r of results) {
+        for (const code of r.found) {
+          if (crossedSet.has(code)) continue
+          counted[code] = (counted[code] ?? 0) + 1
+        }
+      }
+      setEntries(counted)
+      setCrossedOutCodes(crossedUnion)
       setStep('review')
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Unknown error')
@@ -48,9 +60,100 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
     handleFiles(e.dataTransfer.files)
   }
 
-  const newCodes = detectedCodes.filter((c) => !counts[c] || counts[c] === 0)
-  const ownedCodes = detectedCodes.filter((c) => counts[c] && counts[c] >= 1)
-  const validCodes = [...newCodes, ...ownedCodes]
+  const adjust = (code: string, delta: number) => {
+    setEntries((prev) => {
+      const next = { ...prev }
+      const q = (next[code] ?? 0) + delta
+      if (q <= 0) delete next[code]
+      else next[code] = q
+      return next
+    })
+  }
+
+  const removeEntry = (code: string) => {
+    setEntries((prev) => {
+      const next = { ...prev }
+      delete next[code]
+      return next
+    })
+  }
+
+  const restoreCrossed = (code: string) => {
+    setCrossedOutCodes((prev) => prev.filter((c) => c !== code))
+    setEntries((prev) => ({ ...prev, [code]: (prev[code] ?? 0) + 1 }))
+  }
+
+  const handleAdd = () => {
+    const code = addInput.trim().toUpperCase()
+    if (!code) return
+    if (!VALID_CODES.has(code)) {
+      setAddError(`"${code}" is not a valid sticker code`)
+      return
+    }
+    setEntries((prev) => ({ ...prev, [code]: (prev[code] ?? 0) + 1 }))
+    setCrossedOutCodes((prev) => prev.filter((c) => c !== code))
+    setAddInput('')
+    setAddError('')
+  }
+
+  const { newEntries, ownedEntries, totalQty, duplicateCount } = useMemo(() => {
+    const newE: Array<[string, number]> = []
+    const ownedE: Array<[string, number]> = []
+    let total = 0
+    let dupes = 0
+    for (const [code, qty] of Object.entries(entries)) {
+      total += qty
+      if (qty > 1) dupes += 1
+      if (counts[code] && counts[code] >= 1) ownedE.push([code, qty])
+      else newE.push([code, qty])
+    }
+    newE.sort(([a], [b]) => a.localeCompare(b))
+    ownedE.sort(([a], [b]) => a.localeCompare(b))
+    return { newEntries: newE, ownedEntries: ownedE, totalQty: total, duplicateCount: dupes }
+  }, [entries, counts])
+
+  const confirmPayload = useMemo(() => {
+    const list: string[] = []
+    for (const [code, qty] of Object.entries(entries)) {
+      for (let i = 0; i < qty; i++) list.push(code)
+    }
+    return list
+  }, [entries])
+
+  const renderChip = (code: string, qty: number, owned: boolean) => {
+    const isDuplicate = qty > 1
+    const base = owned
+      ? 'bg-white/[0.06] border-white/[0.10] text-white/70'
+      : 'bg-indigo-600/30 border-indigo-500/40 text-indigo-200'
+    const dupRing = isDuplicate ? 'ring-1 ring-amber-400/60' : ''
+    return (
+      <div key={code} className={`flex items-center gap-1 border ${base} ${dupRing} text-xs font-mono pl-2 pr-1 py-0.5 rounded-lg`}>
+        <span>{code}</span>
+        <span className={`px-1 rounded ${isDuplicate ? 'text-amber-300 font-semibold' : 'text-white/40'}`}>×{qty}</span>
+        <button
+          onClick={() => adjust(code, -1)}
+          className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-white/60"
+          aria-label={`Decrease ${code}`}
+        >
+          −
+        </button>
+        <button
+          onClick={() => adjust(code, 1)}
+          className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-white/60"
+          aria-label={`Increase ${code}`}
+        >
+          +
+        </button>
+        <button
+          onClick={() => removeEntry(code)}
+          className="w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/30 text-white/50 hover:text-red-200"
+          aria-label={`Remove ${code}`}
+        >
+          ✕
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#0a0a14]">
@@ -140,46 +243,94 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
             )}
 
             <p className="text-white/50 text-xs">
-              Found <strong className="text-white">{detectedCodes.length}</strong> code{detectedCodes.length !== 1 ? 's' : ''} across{' '}
+              Found <strong className="text-white">{totalQty}</strong> sticker{totalQty !== 1 ? 's' : ''} across{' '}
               <strong className="text-white">{files.length}</strong> image{files.length !== 1 ? 's' : ''}
+              {Object.keys(entries).length > 0 && ` (${Object.keys(entries).length} unique code${Object.keys(entries).length !== 1 ? 's' : ''})`}
             </p>
 
-            {detectedCodes.length === 0 && (
-              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 text-center text-white/40 text-sm">
-                No sticker codes detected. Try a clearer photo.
+            {duplicateCount > 0 && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200">
+                <strong>{duplicateCount}</strong> code{duplicateCount !== 1 ? 's' : ''} written more than once in the photo — adjust quantity below if that's wrong.
               </div>
             )}
 
-            {newCodes.length > 0 && (
+            {totalQty === 0 && crossedOutCodes.length === 0 && (
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 text-center text-white/40 text-sm">
+                No sticker codes detected. Try a clearer photo or add codes manually below.
+              </div>
+            )}
+
+            {newEntries.length > 0 && (
               <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
                 <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2.5">
-                  New — {newCodes.length}
+                  New — {newEntries.length}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {newCodes.map((code) => (
-                    <span key={code} className="bg-indigo-600/30 border border-indigo-500/40 text-indigo-200 text-xs font-mono px-2 py-0.5 rounded-lg">
-                      {code}
-                    </span>
-                  ))}
+                  {newEntries.map(([code, qty]) => renderChip(code, qty, false))}
                 </div>
               </div>
             )}
 
-            {ownedCodes.length > 0 && (
+            {ownedEntries.length > 0 && (
               <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
                 <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2.5">
-                  Already owned — {ownedCodes.length}
+                  Already owned — {ownedEntries.length}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {ownedCodes.map((code) => (
-                    <span key={code} className="bg-white/[0.06] border border-white/[0.10] text-white/50 text-xs font-mono px-2 py-0.5 rounded-lg">
-                      {code}
-                    </span>
-                  ))}
+                  {ownedEntries.map(([code, qty]) => renderChip(code, qty, true))}
                 </div>
-                <p className="text-xs text-white/25 mt-2">These will be incremented (+1 duplicate).</p>
+                <p className="text-xs text-white/25 mt-2">These will be incremented (+N duplicates).</p>
               </div>
             )}
+
+            {crossedOutCodes.length > 0 && (
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
+                <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2.5">
+                  Marked as already had (crossed out) — {crossedOutCodes.length}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {crossedOutCodes.map((code) => (
+                    <div
+                      key={code}
+                      className="flex items-center gap-1 bg-white/[0.03] border border-white/[0.08] text-white/40 text-xs font-mono pl-2 pr-1 py-0.5 rounded-lg line-through"
+                    >
+                      <span>{code}</span>
+                      <button
+                        onClick={() => restoreCrossed(code)}
+                        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-white/60 no-underline"
+                        aria-label={`Add ${code} back to import`}
+                        title="Add back to import"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-white/25 mt-2">Excluded from import — tap + to add one back.</p>
+              </div>
+            )}
+
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
+              <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2.5">
+                Add a code manually
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={addInput}
+                  onChange={(e) => { setAddInput(e.target.value); setAddError('') }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleAdd() }}
+                  placeholder="e.g. ARG1"
+                  className="flex-1 bg-white/[0.06] border border-white/[0.10] text-white text-sm font-mono px-3 py-2 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50"
+                />
+                <button
+                  onClick={handleAdd}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                >
+                  Add
+                </button>
+              </div>
+              {addError && <p className="text-xs text-red-300 mt-2">{addError}</p>}
+            </div>
           </div>
         )}
 
@@ -208,11 +359,11 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(validCodes)}
-            disabled={validCodes.length === 0}
+            onClick={() => onConfirm(confirmPayload)}
+            disabled={confirmPayload.length === 0}
             className="flex-[2] bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98]"
           >
-            Import {validCodes.length} sticker{validCodes.length !== 1 ? 's' : ''}
+            Import {confirmPayload.length} sticker{confirmPayload.length !== 1 ? 's' : ''}
           </button>
         </div>
       )}
