@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { Layout } from './components/Layout'
 import { Home } from './pages/Home'
 import { Section } from './pages/Section'
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
+      <Analytics />
     </BrowserRouter>
   )
 }
