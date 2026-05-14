@@ -1,17 +1,3 @@
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
-
-const PROMPT = `You are helping track a Panini FIFA World Cup 2026 sticker album.
-The user has written a list of sticker codes they own.
-Valid sticker codes follow these patterns:
-- Team player codes: 3-letter country code + 1-2 digit number (e.g. ARG1, ARG20, BRA5, FRA13)
-- World Cup intro/museum codes: FWC followed by a number (e.g. FWC1, FWC3, FWC19)
-- Coca-Cola insert codes: CC followed by a number (e.g. CC1, CC14)
-
-From this handwritten image, extract every sticker code you can see.
-Return ONLY a JSON array of strings with no explanation.
-Example: ["ARG1","BRA5","FWC3","CC2"]
-If you cannot read any codes, return an empty array: []`
-
 async function resizeImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -35,33 +21,15 @@ async function resizeImage(file: File): Promise<string> {
 
 export async function parseStickersFromImage(
   file: File,
-  apiKey: string,
   validCodes: Set<string>
 ): Promise<{ found: string[]; raw: string }> {
   const base64 = await resizeImage(file)
   const mediaType = 'image/jpeg'
 
-  const res = await fetch(ANTHROPIC_API_URL, {
+  const res = await fetch('/api/parse-stickers', {
     method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-allow-browser': 'true',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 512,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: PROMPT },
-          ],
-        },
-      ],
-    }),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ imageBase64: base64, mediaType }),
   })
 
   if (!res.ok) {
