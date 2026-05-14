@@ -9,10 +9,16 @@ Valid sticker codes follow these patterns:
 - World Cup intro/museum codes: FWC followed by a number (e.g. FWC1, FWC3, FWC19)
 - Coca-Cola insert codes: CC followed by a number (e.g. CC1, CC14)
 
-From this handwritten image, extract every sticker code you can see.
-Return ONLY a JSON array of strings with no explanation.
-Example: ["ARG1","BRA5","FWC3","CC2"]
-If you cannot read any codes, return an empty array: []`
+From this handwritten image, extract sticker codes.
+
+Rules:
+- List every code occurrence in "found", INCLUDING REPEATS. If the same code appears twice on the page, include it twice — we use the duplicates to count multiple copies.
+- If a code is crossed out, struck through, scribbled over, or marked with an X over it, put it in "crossedOut" instead of "found". These are stickers the user has marked as already pasted. Do NOT include crossed-out codes in "found".
+- "crossedOut" should have each code only once.
+
+Return ONLY a JSON object with this exact shape, no explanation:
+{"found":["ARG1","ARG1","BRA5"],"crossedOut":["FWC3"]}
+If you cannot read any codes, return {"found":[],"crossedOut":[]}`
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

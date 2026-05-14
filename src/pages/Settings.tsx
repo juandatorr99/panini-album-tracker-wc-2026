@@ -1,9 +1,6 @@
 import { useRef, useState } from 'react'
 import { useCollection } from '../store/collection'
-import { TEAMS } from '../lib/teams'
 import { PhotoImportOverlay } from '../components/PhotoImportOverlay'
-
-const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 
 type ExportData = {
   counts: Record<string, number>
@@ -15,8 +12,6 @@ export function Settings() {
   const showCokeInsert = useCollection((s) => s.showCokeInsert)
   const toggleCoke = useCollection((s) => s.toggleCoke)
   const groupAssignments = useCollection((s) => s.groupAssignments)
-  const setGroup = useCollection((s) => s.setGroup)
-  const removeGroup = useCollection((s) => s.removeGroup)
   const reset = useCollection((s) => s.reset)
   const counts = useCollection((s) => s.counts)
   const increment = useCollection((s) => s.increment)
@@ -105,27 +100,6 @@ export function Settings() {
           >
             <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${showCokeInsert ? 'translate-x-5' : 'translate-x-0'}`} />
           </button>
-        </div>
-      </div>
-
-      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4">
-        <p className="font-semibold text-white text-sm mb-0.5">Group Draw Assignments</p>
-        <p className="text-xs text-white/30 mb-4">Set each team's group (A–L) to display them in group order on the home screen.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2.5 gap-x-3 max-h-80 overflow-y-auto pr-1">
-          {TEAMS.map((team) => (
-            <div key={team.code} className="flex items-center gap-1.5">
-              {team.flag && <span className="text-sm shrink-0">{team.flag}</span>}
-              <span className="text-xs text-white/50 flex-1 truncate min-w-0">{team.name}</span>
-              <select
-                value={groupAssignments[team.code] ?? ''}
-                onChange={(e) => { if (e.target.value) setGroup(team.code, e.target.value); else removeGroup(team.code) }}
-                className="text-xs bg-white/[0.08] border border-white/[0.10] text-white rounded-lg px-2 py-1 w-12 shrink-0 focus:outline-none focus:border-indigo-500/50 appearance-none"
-              >
-                <option value="" className="bg-[#0a0a14]">—</option>
-                {GROUPS.map((g) => <option key={g} value={g} className="bg-[#0a0a14]">{g}</option>)}
-              </select>
-            </div>
-          ))}
         </div>
       </div>
 
