@@ -10,7 +10,6 @@ type Props = {
 
 type Step = 'idle' | 'processing' | 'review' | 'error'
 
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined
 const VALID_CODES = new Set(stickerByCode.keys())
 
 export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
@@ -25,11 +24,6 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
 
   const handleFiles = async (selected: FileList | null) => {
     if (!selected || selected.length === 0) return
-    if (!API_KEY) {
-      setErrorMsg('VITE_ANTHROPIC_API_KEY is not set. Add it to your .env.local file or Vercel environment variables.')
-      setStep('error')
-      return
-    }
 
     const fileArr = Array.from(selected)
     setFiles(fileArr)
@@ -38,7 +32,7 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
 
     try {
       const results = await Promise.all(
-        fileArr.map((f) => parseStickersFromImage(f, API_KEY, VALID_CODES))
+        fileArr.map((f) => parseStickersFromImage(f, VALID_CODES))
       )
       const merged = [...new Set(results.flatMap((r) => r.found))]
       setDetectedCodes(merged)
@@ -76,12 +70,6 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
         {/* IDLE */}
         {step === 'idle' && (
           <div className="space-y-4">
-            {!API_KEY && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-300">
-                <strong>API key not configured.</strong> Add <code className="font-mono bg-white/10 px-1 rounded">VITE_ANTHROPIC_API_KEY</code> to your <code className="font-mono bg-white/10 px-1 rounded">.env.local</code> file or Vercel environment variables.
-              </div>
-            )}
-
             <div
               className="border-2 border-dashed border-white/20 rounded-2xl p-8 flex flex-col items-center gap-3 cursor-pointer hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all"
               onClick={() => fileInputRef.current?.click()}
@@ -96,8 +84,7 @@ export function PhotoImportOverlay({ onClose, onConfirm }: Props) {
                 Multiple images supported — each will be scanned separately
               </p>
               <button
-                disabled={!API_KEY}
-                className="mt-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all"
+                className="mt-1 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all"
               >
                 Select images
               </button>
